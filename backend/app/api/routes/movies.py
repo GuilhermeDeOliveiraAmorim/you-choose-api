@@ -1,0 +1,101 @@
+from datetime import datetime, date
+from http.client import HTTPException
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from imdb import Cinemagoer
+from ..schemas.movies import AddMovie, ViewMovie
+from ..models import Movie, Genre
+from ..database import get_db
+from sqlalchemy.orm import Session
+from ..schemas.user import User
+from ..oath2 import get_current_user
+
+router = APIRouter(
+    prefix='/api/movies',
+    tags=['Filmes']
+)
+
+
+@router.get('/')
+def retornar_lista_de_filmes(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    lista_filmes = db.query(Movie).all()
+    return lista_filmes
+
+
+@router.post('/')
+def cadastrar_um_novo_filme(request: AddMovie, db: Session = Depends(get_db)):
+    novo_filme = Movie(**request.dict())
+    db.add(novo_filme)
+    db.commit()
+    db.refresh(novo_filme)
+
+    return novo_filme
+
+
+@router.post('/{imdb_id}')
+def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Session = Depends(get_db)):
+
+    movie = db.query(Movie).filter(Movie.imdb_id == imdb_id).first()
+
+    ia = Cinemagoer()
+
+    imdb_movie = ia.get_movie(imdb_id)
+
+    print(imdb_movie['full-size cover url'])
+
+    if movie:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"O filme {movie.title} já existe no seu banco.")
+
+    lista_generos = db.query(Genre.name).all()
+    # lista_diretores = db.query(Director.name).all()
+
+    lista_generos = [x[0] for x in lista_generos]
+    # lista_diretores = [x[0] for x in lista_diretores]
+
+    for x in imdb_movie['genres']:
+        if x not in lista_generos:
+            db.add(Genre(name=x))
+        else:
+            print("Esse gênero já está cadastrado!")
+
+    # for x in imdb_movie['directors']:
+    #     if x not in lista_diretores:
+    #         db.add(Director(name=x))
+    #     else:
+    #         print("Esse diretor já está cadastrado!")
+
+    novo_filme = Movie(imdb_id=imdb_id, title=imdb_movie['title'], year=imdb_movie['year'], imdbRating=imdb_movie['rating'],
+                       poster=imdb_movie['full-size cover url'])
+
+    print(novo_filme)
+    db.add(novo_filme)
+    db.commit()
+    db.refresh(novo_filme)
+
+    return "Rola"  # novo_filme
+
+
+@router.get('/{filme_id}')
+def retornar_filme(filme_id: int, db: Session = Depends(get_db)):
+    filme = db.query(Movie).get(filme_id)
+    return filme
+
+
+@router.delete('/{filme_id}')
+def deletar_filme(filme_id: int, db: Session = Depends(get_db)):
+    db.query(Movie).filter(Movie.id == filme_id).delete(
+        synchronize_session=False)
+    db.commit()
+
+    return "Filme deletado com sucesso!"
+
+
+@router.put('/{filme_id}')
+def atualizar_informacoes_do_filme(request: AddMovie, filme_id: int, db: Session = Depends(get_db)):
+
+    db.query(Movie).filter(Movie.id == filme_id).update(request.dict())
+    db.commit()
+
+    return "Filme atualizado com sucesso!"
