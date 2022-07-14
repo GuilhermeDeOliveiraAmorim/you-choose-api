@@ -1,4 +1,4 @@
-import { Spinner } from "@chakra-ui/react"
+import { Box, Grid, GridItem, Image, Spinner, Text } from "@chakra-ui/react"
 import { useRouter } from "next/router"
 import useMovie from "../../hooks/useMovie"
 
@@ -14,8 +14,28 @@ export default function DetalheMovies() {
     }
 
     return (
-        <div>
-            Detalhes do filme: {movie.data.title}, do ano {movie.data.year}
-        </div>
+        <Grid
+            h='200px'
+            templateRows='repeat(2, 1fr)'
+            templateColumns='repeat(5, 1fr)'
+            gap={4}
+        >
+            <GridItem rowSpan={2} colSpan={1} bg='tomato'>
+                <Box shadow='lg'>
+                    <Image objectFit='cover' src={movie.data.poster} alt={movie.data.title} />
+                </Box>
+            </GridItem>
+            <GridItem colSpan={4} bg='papayawhip'>
+                <Text>
+                    {movie.data.title}
+                </Text>
+                <Text>
+                    {movie.data.year}
+                </Text>
+                <Text>
+                    {movie.data.imdbRating}
+                </Text>
+            </GridItem>
+        </Grid>
     )
 }
