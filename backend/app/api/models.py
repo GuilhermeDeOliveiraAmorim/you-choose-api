@@ -17,6 +17,7 @@ class Movie(Base):
     title = Column(String)
     year = Column(Integer)
     imdbRating = Column(Float)
+    youchooseRating = Column(Float)
     poster = Column(String)
     created: Column(Date)
     modified: Column(Date)

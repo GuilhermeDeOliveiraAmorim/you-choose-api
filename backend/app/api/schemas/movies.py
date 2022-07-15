@@ -6,6 +6,7 @@ class AddMovie(BaseModel):
     title: str
     year: int
     imdbRating: float
+    youchooseRating: float
     poster: str
 
     class Config():

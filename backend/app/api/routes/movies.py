@@ -66,8 +66,14 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
     #     else:
     #         print("Esse diretor já está cadastrado!")
 
-    novo_filme = Movie(imdb_id=imdb_id, title=imdb_movie['title'], year=imdb_movie['year'], imdbRating=imdb_movie['rating'],
-                       poster=imdb_movie['full-size cover url'])
+    novo_filme = Movie(
+        imdb_id=imdb_id,
+        title=imdb_movie['title'],
+        year=imdb_movie['year'],
+        imdbRating=imdb_movie['rating'],
+        poster=imdb_movie['full-size cover url'],
+        youchooseRatingv=0
+    )
 
     print(novo_filme)
     db.add(novo_filme)
