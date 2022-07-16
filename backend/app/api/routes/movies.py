@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from imdb import Cinemagoer
 from ..schemas.movies import AddMovie, ViewMovie
-from ..models import Movie, Genre
+from ..models import Director, Movie, Genre
 from ..database import get_db
 from sqlalchemy.orm import Session
 from ..schemas.user import User
@@ -38,21 +38,19 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
     movie = db.query(Movie).filter(Movie.imdb_id == imdb_id).first()
 
-    ia = Cinemagoer()
-
-    imdb_movie = ia.get_movie(imdb_id)
-
-    print(imdb_movie['full-size cover url'])
-
     if movie:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"O filme {movie.title} já existe no seu banco.")
 
+    ia = Cinemagoer()
+
+    imdb_movie = ia.get_movie(imdb_id)
+
     lista_generos = db.query(Genre.name).all()
-    # lista_diretores = db.query(Director.name).all()
+    lista_diretores = db.query(Director.name).all()
 
     lista_generos = [x[0] for x in lista_generos]
-    # lista_diretores = [x[0] for x in lista_diretores]
+    lista_diretores = [x[0] for x in lista_diretores]
 
     for x in imdb_movie['genres']:
         if x not in lista_generos:
@@ -60,11 +58,11 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
         else:
             print("Esse gênero já está cadastrado!")
 
-    # for x in imdb_movie['directors']:
-    #     if x not in lista_diretores:
-    #         db.add(Director(name=x))
-    #     else:
-    #         print("Esse diretor já está cadastrado!")
+    for x in imdb_movie['directors']:
+        if x['name'] not in lista_diretores:
+            db.add(Director(name=x['name']))
+        else:
+            print("Esse diretor já está cadastrado!")
 
     novo_filme = Movie(
         imdb_id=imdb_id,
@@ -72,7 +70,7 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
         year=imdb_movie['year'],
         imdbRating=imdb_movie['rating'],
         poster=imdb_movie['full-size cover url'],
-        youchooseRatingv=0
+        youchooseRating=0
     )
 
     print(novo_filme)
@@ -80,7 +78,7 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
     db.commit()
     db.refresh(novo_filme)
 
-    return "Rola"  # novo_filme
+    return novo_filme
 
 
 @router.get('/{filme_id}')

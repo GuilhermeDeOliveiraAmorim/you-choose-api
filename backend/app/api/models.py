@@ -41,3 +41,11 @@ class GenreInMovie(Base):
 
     movie = relationship("Movie", foreign_keys=[movie_id])
     genre = relationship("Genre", foreign_keys=[genre_id])
+
+
+class Director(Base):
+    __tablename__ = "directors"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    created: Column(Date)
+    modified: Column(Date)
