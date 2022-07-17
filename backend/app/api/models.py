@@ -49,3 +49,11 @@ class Director(Base):
     name = Column(String)
     created: Column(Date)
     modified: Column(Date)
+
+
+class Writer(Base):
+    __tablename__ = "writers"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    created: Column(Date)
+    modified: Column(Date)

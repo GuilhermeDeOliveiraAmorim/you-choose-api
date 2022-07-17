@@ -1,10 +1,12 @@
 from datetime import datetime, date
 from http.client import HTTPException
+from tracemalloc import stop
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from imdb import Cinemagoer
+from sqlalchemy import null
 from ..schemas.movies import AddMovie, ViewMovie
-from ..models import Director, Movie, Genre
+from ..models import Director, Movie, Genre, Writer
 from ..database import get_db
 from sqlalchemy.orm import Session
 from ..schemas.user import User
@@ -48,21 +50,37 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
     lista_generos = db.query(Genre.name).all()
     lista_diretores = db.query(Director.name).all()
+    lista_escritores = db.query(Writer.name).all()
 
     lista_generos = [x[0] for x in lista_generos]
     lista_diretores = [x[0] for x in lista_diretores]
+    lista_escritores = [x[0] for x in lista_escritores]
 
     for x in imdb_movie['genres']:
-        if x not in lista_generos:
-            db.add(Genre(name=x))
+        genreName = x
+        if genreName not in lista_generos:
+            db.add(Genre(name=genreName))
+            print(f"O gênero {genreName} foi cadastrado!")
         else:
-            print("Esse gênero já está cadastrado!")
+            print(f"O gênero {genreName} já está cadastrado!")
 
     for x in imdb_movie['directors']:
-        if x['name'] not in lista_diretores:
-            db.add(Director(name=x['name']))
+        directorName = x['name']
+        if directorName not in lista_diretores:
+            db.add(Director(name=directorName))
+            print(f"O diretor {directorName} foi cadastrado!")
         else:
-            print("Esse diretor já está cadastrado!")
+            print(f"O diretor {directorName} já está cadastrado!")
+
+    for writer in imdb_movie['writers']:
+        if writer.personID is not None:
+            person = ia.get_person(writer.personID)
+            writerName = person['name']
+            if writerName not in lista_escritores:
+                db.add(Writer(name=writerName))
+                print(f"O escritor {writerName} foi cadastrado!")
+            else:
+                print(f"O escritor {writerName} já está cadastrado!")
 
     novo_filme = Movie(
         imdb_id=imdb_id,
@@ -73,7 +91,6 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
         youchooseRating=0
     )
 
-    print(novo_filme)
     db.add(novo_filme)
     db.commit()
     db.refresh(novo_filme)
