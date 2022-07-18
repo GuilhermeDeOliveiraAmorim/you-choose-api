@@ -81,7 +81,9 @@ export default function Movie(props: IProps) {
                                     key={i}
                                     color={i < imdbRating ? 'teal.500' : 'gray.300'}
                                 />
-                            ))}
+                            ))
+                        }
+                        {imdbRating}/10
                     </Box>
                 </Box>
             </Box>
