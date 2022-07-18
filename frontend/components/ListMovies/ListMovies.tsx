@@ -1,4 +1,4 @@
-import { HStack, Spinner } from "@chakra-ui/react";
+import { Flex, Spinner } from "@chakra-ui/react";
 import Movie from "../Movie";
 import useMovies from "../../hooks/useMovies";
 
@@ -11,11 +11,11 @@ const ListMovies = () => {
     }
 
     return (
-        <HStack m={4} spacing={4} overflow={"auto"}>
+        <Flex m={4} gap={"2"} flexWrap={"wrap"}>
             {movies.data.map(movie =>
                 <Movie id={movie.id} title={movie.title} year={movie.year} poster={movie.poster} imdbRating={movie.imdbRating} />
             )}
-        </HStack>
+        </Flex>
 
     )
 }

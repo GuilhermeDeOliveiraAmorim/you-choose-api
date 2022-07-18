@@ -1,7 +1,7 @@
+import ListMovies from "../../components/ListMovies/ListMovies";
+
 export default function Movies() {
     return (
-        <div>
-            Movies
-        </div>
+        <ListMovies />
     )
 }
