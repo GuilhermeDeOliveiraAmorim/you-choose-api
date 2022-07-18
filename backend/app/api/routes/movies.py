@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from imdb import Cinemagoer
 from sqlalchemy import null
 from ..schemas.movies import AddMovie, ViewMovie
-from ..models import Director, Movie, Genre, Writer
+from ..models import Director, GenreInMovie, Movie, Genre, Writer
 from ..database import get_db
 from sqlalchemy.orm import Session
 from ..schemas.user import User
@@ -48,21 +48,56 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
     imdb_movie = ia.get_movie(imdb_id)
 
+    novo_filme = Movie(
+        imdb_id=imdb_id,
+        title=imdb_movie['title'],
+        year=imdb_movie['year'],
+        imdbRating=imdb_movie['rating'],
+        poster=imdb_movie['full-size cover url'],
+        youchooseRating=0
+    )
+
+    db.add(novo_filme)
+    db.commit()
+
     lista_generos = db.query(Genre.name).all()
     lista_diretores = db.query(Director.name).all()
-    lista_escritores = db.query(Writer.name).all()
+    idMovie = db.query(Movie.id).filter(Movie.imdb_id == imdb_id).first()
 
     lista_generos = [x[0] for x in lista_generos]
     lista_diretores = [x[0] for x in lista_diretores]
-    lista_escritores = [x[0] for x in lista_escritores]
 
     for x in imdb_movie['genres']:
+
         genreName = x
+
         if genreName not in lista_generos:
+
             db.add(Genre(name=genreName))
+            db.commit()
+            idGenre = db.query(Genre.id).filter(
+                Genre.name == genreName).first()
+
             print(f"O gênero {genreName} foi cadastrado!")
+
+            db.add(GenreInMovie(movie_id=idMovie, genre_id=idGenre))
+            db.commit()
+
+            print(
+                f"A relação gênero {idGenre} com filme {idMovie} foi cadastrada!")
+
         else:
+
             print(f"O gênero {genreName} já está cadastrado!")
+
+            idGenre = db.query(Genre.id).filter(
+                Genre.name == genreName).first()
+
+            db.add(GenreInMovie(movie_id=idMovie, genre_id=idGenre))
+            db.commit()
+
+            print(
+                f"A relação gênero {idGenre} com filme {idMovie} foi cadastrada!")
 
     for x in imdb_movie['directors']:
         directorName = x['name']
@@ -76,23 +111,15 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
         if writer.personID is not None:
             person = ia.get_person(writer.personID)
             writerName = person['name']
+            lista_escritores = db.query(Writer.name).all()
+            lista_escritores = [x[0] for x in lista_escritores]
             if writerName not in lista_escritores:
                 db.add(Writer(name=writerName))
+                db.commit()
                 print(f"O escritor {writerName} foi cadastrado!")
             else:
                 print(f"O escritor {writerName} já está cadastrado!")
 
-    novo_filme = Movie(
-        imdb_id=imdb_id,
-        title=imdb_movie['title'],
-        year=imdb_movie['year'],
-        imdbRating=imdb_movie['rating'],
-        poster=imdb_movie['full-size cover url'],
-        youchooseRating=0
-    )
-
-    db.add(novo_filme)
-    db.commit()
     db.refresh(novo_filme)
 
     return novo_filme
