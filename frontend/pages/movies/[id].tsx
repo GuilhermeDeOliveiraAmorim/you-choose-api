@@ -19,6 +19,7 @@ export default function DetalheMovies() {
             templateRows='repeat(2, 1fr)'
             templateColumns='repeat(5, 1fr)'
             gap={4}
+            margin={4}
         >
             <GridItem rowSpan={2} colSpan={1} bg='tomato'>
                 <Box shadow='lg'>

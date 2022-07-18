@@ -88,6 +88,5 @@ export default function Movie(props: IProps) {
                 </Box>
             </Box>
         </Link>
-
     )
 }
