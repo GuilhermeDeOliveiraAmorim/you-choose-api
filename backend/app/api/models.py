@@ -45,6 +45,18 @@ class Director(Base):
     name = Column(String)
 
 
+class DirectorInMovie(Base):
+    __tablename__ = "director_in_movie"
+    id = Column(Integer, primary_key=True, index=True)
+    movie_id = Column(Integer, ForeignKey(
+        "movies.id", ondelete="SET NULL"), nullable=True)
+    director_id = Column(Integer, ForeignKey(
+        "genres.id", ondelete="SET NULL"), nullable=True)
+
+    movie = relationship("Movie", foreign_keys=[movie_id])
+    director = relationship("Director", foreign_keys=[director_id])
+
+
 class Writer(Base):
     __tablename__ = "writers"
     id = Column(Integer, primary_key=True, index=True)

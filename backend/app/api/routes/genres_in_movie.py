@@ -2,7 +2,6 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from ..schemas.genres_in_movie import AddGenresInMovie, ViewGenresInMovie
-from ..schemas.movies import AddMovie, ViewMovie
 from ..models import GenreInMovie
 from ..database import get_db
 from sqlalchemy.orm import Session
