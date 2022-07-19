@@ -62,7 +62,9 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
     lista_generos = db.query(Genre.name).all()
     lista_diretores = db.query(Director.name).all()
-    idMovie = db.query(Movie.id).filter(Movie.imdb_id == imdb_id).first()
+    movie = db.query(Movie.id).filter(Movie.imdb_id == imdb_id).first()
+
+    idMovie = movie.id
 
     lista_generos = [x[0] for x in lista_generos]
     lista_diretores = [x[0] for x in lista_diretores]
@@ -75,8 +77,10 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
             db.add(Genre(name=genreName))
             db.commit()
-            idGenre = db.query(Genre.id).filter(
+            genre = db.query(Genre).filter(
                 Genre.name == genreName).first()
+
+            idGenre = genre.id
 
             print(f"O gênero {genreName} foi cadastrado!")
 
@@ -90,8 +94,10 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
             print(f"O gênero {genreName} já está cadastrado!")
 
-            idGenre = db.query(Genre.id).filter(
+            genre = db.query(Genre).filter(
                 Genre.name == genreName).first()
+
+            idGenre = genre.id
 
             db.add(GenreInMovie(movie_id=idMovie, genre_id=idGenre))
             db.commit()

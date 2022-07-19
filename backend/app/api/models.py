@@ -19,16 +19,12 @@ class Movie(Base):
     imdbRating = Column(Float)
     youchooseRating = Column(Float)
     poster = Column(String)
-    created: Column(Date)
-    modified: Column(Date)
 
 
 class Genre(Base):
     __tablename__ = "genres"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    created: Column(Date)
-    modified: Column(Date)
 
 
 class GenreInMovie(Base):
@@ -47,13 +43,9 @@ class Director(Base):
     __tablename__ = "directors"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    created: Column(Date)
-    modified: Column(Date)
 
 
 class Writer(Base):
     __tablename__ = "writers"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    created: Column(Date)
-    modified: Column(Date)
