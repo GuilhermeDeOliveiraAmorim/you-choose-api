@@ -1,6 +1,7 @@
 from http.client import HTTPException
 from fastapi import APIRouter, Depends, HTTPException, status
 from imdb import Cinemagoer
+from sqlalchemy import null
 from ..schemas.movies import AddMovie
 from ..models import Actor, ActorInMovie, Director, DirectorInMovie, GenreInMovie, Movie, Genre, Writer, WriterInMovie
 from ..database import get_db
@@ -14,19 +15,6 @@ router = APIRouter(
 
 @router.get('/')
 def retornar_lista_de_filmes(db: Session = Depends(get_db)):
-
-    ia = Cinemagoer()
-
-    imdb_movie = ia.get_movie("1345836")
-
-    print(type(imdb_movie['actors']))
-
-    for x in imdb_movie['actors']:
-        person = ia.get_person(x.personID)
-        print(person['name'])
-        print(person['headshot'])
-        exit
-
     lista_filmes = db.query(Movie).all()
     return lista_filmes
 
@@ -66,6 +54,10 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
     db.add(novo_filme)
     db.commit()
 
+    movie = db.query(Movie.id).filter(Movie.imdb_id == imdb_id).first()
+
+    idMovie = movie.id
+
     lista_generos = db.query(Genre.name).all()
     lista_diretores = db.query(Director.name).all()
     lista_escritores = db.query(Writer.name).all()
@@ -76,10 +68,6 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
     lista_escritores = [x[0] for x in lista_escritores]
     lista_atores = [x[0] for x in lista_atores]
 
-    movie = db.query(Movie.id).filter(Movie.imdb_id == imdb_id).first()
-
-    idMovie = movie.id
-
     for x in imdb_movie['genres']:
 
         genreName = x
@@ -88,6 +76,7 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
 
             db.add(Genre(name=genreName))
             db.commit()
+
             genre = db.query(Genre).filter(
                 Genre.name == genreName).first()
 
@@ -131,6 +120,7 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
                 try:
                     directorHeadshot = person['headshot']
                 except:
+                    directorHeadshot = "person.png"
                     print(
                         f"Erro ao tentar achar a imagem do diretor {directorName}")
 
@@ -181,6 +171,7 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
                 try:
                     writerHeadshot = person['headshot']
                 except:
+                    writerHeadshot = "person.png"
                     print(
                         f"Erro ao tentar achar a imagem do escritor {writerName}")
 
@@ -231,6 +222,7 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
                 try:
                     actorHeadshot = person['headshot']
                 except:
+                    actorHeadshot = "person.png"
                     print(f"Erro ao tentar achar a imagem do ator {actorName}")
 
                 db.add(Actor(name=actorName, headshot=actorHeadshot,
@@ -289,7 +281,7 @@ def retornar_filme(filme_id: int, db: Session = Depends(get_db)):
     actors = db.query(ActorInMovie).filter(
         ActorInMovie.movie_id == idMovie).all()
 
-    return movie, genres, directors, writers, actors
+    return movie
 
 
 @ router.delete('/{filme_id}')
