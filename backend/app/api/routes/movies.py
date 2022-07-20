@@ -1,16 +1,10 @@
-from datetime import datetime, date
 from http.client import HTTPException
-from tracemalloc import stop
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from imdb import Cinemagoer
-from sqlalchemy import null
-from ..schemas.movies import AddMovie, ViewMovie
-from ..models import Director, DirectorInMovie, GenreInMovie, Movie, Genre, Writer, WriterInMovie
+from ..schemas.movies import AddMovie
+from ..models import Actor, ActorInMovie, Director, DirectorInMovie, GenreInMovie, Movie, Genre, Writer, WriterInMovie
 from ..database import get_db
 from sqlalchemy.orm import Session
-from ..schemas.user import User
-from ..oath2 import get_current_user
 
 router = APIRouter(
     prefix='/api/movies',
@@ -20,6 +14,18 @@ router = APIRouter(
 
 @router.get('/')
 def retornar_lista_de_filmes(db: Session = Depends(get_db)):
+
+    ia = Cinemagoer()
+
+    imdb_movie = ia.get_movie("1345836")
+
+    print(type(imdb_movie['actors']))
+
+    for x in imdb_movie['actors']:
+        person = ia.get_person(x.personID)
+        print(person['name'])
+        print(person['headshot'])
+        exit
 
     lista_filmes = db.query(Movie).all()
     return lista_filmes
@@ -36,7 +42,7 @@ def cadastrar_um_novo_filme(request: AddMovie, db: Session = Depends(get_db)):
 
 
 @router.post('/{imdb_id}')
-def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Session = Depends(get_db)):
+def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)):
 
     movie = db.query(Movie).filter(Movie.imdb_id == imdb_id).first()
 
@@ -150,8 +156,6 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
             writerName = person['name']
 
-            lista_escritores = db.query(Writer.name).all()
-
             lista_escritores = [x[0] for x in lista_escritores]
 
             if writerName not in lista_escritores:
@@ -185,7 +189,60 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
                 db.commit()
 
                 print(
-                    f"A relação diretor {idWriter} com filme {idMovie} foi cadastrada!")
+                    f"A relação escritor {idWriter} com filme {idMovie} foi cadastrada!")
+
+    for actor in imdb_movie['actors']:
+
+        actorIdImdb = actor.personID
+
+        if actorIdImdb is not None:
+
+            person = ia.get_person(actorIdImdb)
+
+            actorName = person['name']
+
+            try:
+                actorHeadshot = person['headshot']
+            except:
+                print(f"Erro ao tentar achar a imagem do ator {actorName}")
+
+            lista_atores = db.query(Actor.name).all()
+
+            lista_atores = [x[0] for x in lista_atores]
+
+            if actorName not in lista_atores:
+
+                db.add(Actor(name=actorName, headshot=actorHeadshot,
+                       id_imdb_actor=actorIdImdb))
+                db.commit()
+
+                print(f"O ator {actorName} foi cadastrado!")
+
+                actor = db.query(Actor).filter(
+                    Actor.name == actorName).first()
+
+                idActor = actor.id
+
+                db.add(ActorInMovie(movie_id=idMovie, actor_id=idActor))
+                db.commit()
+
+                print(
+                    f"A relação ator {idActor} com filme {idMovie} foi cadastrada!")
+
+            else:
+
+                print(f"O ator {actorName} já está cadastrado!")
+
+                actor = db.query(Actor).filter(
+                    Actor.name == actorName).first()
+
+                idActor = actor.id
+
+                db.add(ActorInMovie(movie_id=idMovie, actor_id=idActor))
+                db.commit()
+
+                print(
+                    f"A relação ator {idActor} com filme {idMovie} foi cadastrada!")
 
     db.refresh(novo_filme)
 

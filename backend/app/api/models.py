@@ -73,3 +73,23 @@ class WriterInMovie(Base):
 
     movie = relationship("Movie", foreign_keys=[movie_id])
     writer = relationship("Writer", foreign_keys=[writer_id])
+
+
+class Actor(Base):
+    __tablename__ = "actors"
+    id = Column(Integer, primary_key=True, index=True)
+    id_imdb_actor = Column(String)
+    name = Column(String)
+    headshot = Column(String)
+
+
+class ActorInMovie(Base):
+    __tablename__ = "actor_in_movie"
+    id = Column(Integer, primary_key=True, index=True)
+    movie_id = Column(Integer, ForeignKey(
+        "movies.id", ondelete="SET NULL"), nullable=True)
+    actor_id = Column(Integer, ForeignKey(
+        "actors.id", ondelete="SET NULL"), nullable=True)
+
+    movie = relationship("Movie", foreign_keys=[movie_id])
+    actor = relationship("Actor", foreign_keys=[actor_id])
