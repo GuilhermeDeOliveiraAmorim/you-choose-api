@@ -51,7 +51,7 @@ class DirectorInMovie(Base):
     movie_id = Column(Integer, ForeignKey(
         "movies.id", ondelete="SET NULL"), nullable=True)
     director_id = Column(Integer, ForeignKey(
-        "genres.id", ondelete="SET NULL"), nullable=True)
+        "directors.id", ondelete="SET NULL"), nullable=True)
 
     movie = relationship("Movie", foreign_keys=[movie_id])
     director = relationship("Director", foreign_keys=[director_id])
@@ -61,3 +61,15 @@ class Writer(Base):
     __tablename__ = "writers"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+
+
+class WriterInMovie(Base):
+    __tablename__ = "writer_in_movie"
+    id = Column(Integer, primary_key=True, index=True)
+    movie_id = Column(Integer, ForeignKey(
+        "movies.id", ondelete="SET NULL"), nullable=True)
+    writer_id = Column(Integer, ForeignKey(
+        "writers.id", ondelete="SET NULL"), nullable=True)
+
+    movie = relationship("Movie", foreign_keys=[movie_id])
+    writer = relationship("Writer", foreign_keys=[writer_id])

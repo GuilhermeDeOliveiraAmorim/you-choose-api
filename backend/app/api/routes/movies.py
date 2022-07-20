@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from imdb import Cinemagoer
 from sqlalchemy import null
 from ..schemas.movies import AddMovie, ViewMovie
-from ..models import Director, GenreInMovie, Movie, Genre, Writer
+from ..models import Director, DirectorInMovie, GenreInMovie, Movie, Genre, Writer, WriterInMovie
 from ..database import get_db
 from sqlalchemy.orm import Session
 from ..schemas.user import User
@@ -106,25 +106,86 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
                 f"A relação gênero {idGenre} com filme {idMovie} foi cadastrada!")
 
     for x in imdb_movie['directors']:
+
         directorName = x['name']
+
         if directorName not in lista_diretores:
+
             db.add(Director(name=directorName))
+            db.commit()
+
             print(f"O diretor {directorName} foi cadastrado!")
+
+            director = db.query(Director).filter(
+                Director.name == directorName).first()
+
+            idDirector = director.id
+
+            db.add(DirectorInMovie(movie_id=idMovie, director_id=idDirector))
+            db.commit()
+
+            print(
+                f"A relação diretor {idDirector} com filme {idMovie} foi cadastrada!")
+
         else:
+
             print(f"O diretor {directorName} já está cadastrado!")
 
+            director = db.query(Director).filter(
+                Director.name == directorName).first()
+
+            idDirector = director.id
+
+            db.add(DirectorInMovie(movie_id=idMovie, director_id=idDirector))
+            db.commit()
+
+            print(
+                f"A relação diretor {idDirector} com filme {idMovie} foi cadastrada!")
+
     for writer in imdb_movie['writers']:
+
         if writer.personID is not None:
+
             person = ia.get_person(writer.personID)
+
             writerName = person['name']
+
             lista_escritores = db.query(Writer.name).all()
+
             lista_escritores = [x[0] for x in lista_escritores]
+
             if writerName not in lista_escritores:
+
                 db.add(Writer(name=writerName))
                 db.commit()
+
                 print(f"O escritor {writerName} foi cadastrado!")
+
+                writer = db.query(Writer).filter(
+                    Writer.name == writerName).first()
+
+                idWriter = writer.id
+
+                db.add(WriterInMovie(movie_id=idMovie, writer_id=idWriter))
+                db.commit()
+
+                print(
+                    f"A relação diretor {idWriter} com filme {idMovie} foi cadastrada!")
+
             else:
+
                 print(f"O escritor {writerName} já está cadastrado!")
+
+                writer = db.query(Writer).filter(
+                    Writer.name == writerName).first()
+
+                idWriter = writer.id
+
+                db.add(WriterInMovie(movie_id=idMovie, writer_id=idWriter))
+                db.commit()
+
+                print(
+                    f"A relação diretor {idWriter} com filme {idMovie} foi cadastrada!")
 
     db.refresh(novo_filme)
 
@@ -133,8 +194,21 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, request: AddMovie, db: Sessio
 
 @router.get('/{filme_id}')
 def retornar_filme(filme_id: int, db: Session = Depends(get_db)):
-    filme = db.query(Movie).get(filme_id)
-    return filme
+
+    movie = db.query(Movie).get(filme_id)
+
+    idMovie = movie.id
+
+    genre = db.query(GenreInMovie).filter(
+        GenreInMovie.movie_id == idMovie).all()
+
+    director = db.query(DirectorInMovie).filter(
+        DirectorInMovie.movie_id == idMovie).all()
+
+    writer = db.query(WriterInMovie).filter(
+        WriterInMovie.movie_id == idMovie).all()
+
+    return movie, director, genre, writer
 
 
 @router.delete('/{filme_id}')

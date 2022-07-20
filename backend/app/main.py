@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.routes import movies, genres, genres_in_movie, directors_in_movie, user, autentication, directors, writers
+from app.api.routes import movies, genres, genres_in_movie, directors_in_movie, user, autentication, directors, writers, writers_in_movie
 from app.api.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,5 +30,6 @@ app.include_router(directors.router)
 app.include_router(writers.router)
 app.include_router(genres_in_movie.router)
 app.include_router(directors_in_movie.router)
+app.include_router(writers_in_movie.router)
 app.include_router(user.router)
 app.include_router(autentication.router)
