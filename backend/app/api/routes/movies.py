@@ -68,12 +68,17 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
 
     lista_generos = db.query(Genre.name).all()
     lista_diretores = db.query(Director.name).all()
-    movie = db.query(Movie.id).filter(Movie.imdb_id == imdb_id).first()
-
-    idMovie = movie.id
+    lista_escritores = db.query(Writer.name).all()
+    lista_atores = db.query(Actor.name).all()
 
     lista_generos = [x[0] for x in lista_generos]
     lista_diretores = [x[0] for x in lista_diretores]
+    lista_escritores = [x[0] for x in lista_escritores]
+    lista_atores = [x[0] for x in lista_atores]
+
+    movie = db.query(Movie.id).filter(Movie.imdb_id == imdb_id).first()
+
+    idMovie = movie.id
 
     for x in imdb_movie['genres']:
 
@@ -111,56 +116,76 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
             print(
                 f"A relação gênero {idGenre} com filme {idMovie} foi cadastrada!")
 
-    for x in imdb_movie['directors']:
+    for director in imdb_movie['directors']:
 
-        directorName = x['name']
+        directorIdImdb = director.personID
 
-        if directorName not in lista_diretores:
+        if directorIdImdb is not None:
 
-            db.add(Director(name=directorName))
-            db.commit()
+            person = ia.get_person(directorIdImdb)
 
-            print(f"O diretor {directorName} foi cadastrado!")
+            directorName = person['name']
 
-            director = db.query(Director).filter(
-                Director.name == directorName).first()
+            if directorName not in lista_diretores:
 
-            idDirector = director.id
+                try:
+                    directorHeadshot = person['headshot']
+                except:
+                    print(
+                        f"Erro ao tentar achar a imagem do diretor {directorName}")
 
-            db.add(DirectorInMovie(movie_id=idMovie, director_id=idDirector))
-            db.commit()
+                db.add(Director(name=directorName, headshot=directorHeadshot,
+                                id_imdb_director=directorIdImdb))
+                db.commit()
 
-            print(
-                f"A relação diretor {idDirector} com filme {idMovie} foi cadastrada!")
+                print(f"O diretor {directorName} foi cadastrado!")
 
-        else:
+                director = db.query(Director).filter(
+                    Director.name == directorName).first()
 
-            print(f"O diretor {directorName} já está cadastrado!")
+                idDirector = director.id
 
-            director = db.query(Director).filter(
-                Director.name == directorName).first()
+                db.add(DirectorInMovie(movie_id=idMovie, director_id=idDirector))
+                db.commit()
 
-            idDirector = director.id
+                print(
+                    f"A relação diretor {idDirector} com filme {idMovie} foi cadastrada!")
 
-            db.add(DirectorInMovie(movie_id=idMovie, director_id=idDirector))
-            db.commit()
+            else:
 
-            print(
-                f"A relação diretor {idDirector} com filme {idMovie} foi cadastrada!")
+                print(f"O diretor {directorName} já está cadastrado!")
+
+                director = db.query(Director).filter(
+                    Director.name == directorName).first()
+
+                idDirector = director.id
+
+                db.add(DirectorInMovie(movie_id=idMovie, director_id=idDirector))
+                db.commit()
+
+                print(
+                    f"A relação diretor {idDirector} com filme {idMovie} foi cadastrada!")
 
     for writer in imdb_movie['writers']:
 
-        if writer.personID is not None:
+        writerIdImdb = writer.personID
 
-            person = ia.get_person(writer.personID)
+        if writerIdImdb is not None:
+
+            person = ia.get_person(writerIdImdb)
 
             writerName = person['name']
 
-            lista_escritores = [x[0] for x in lista_escritores]
-
             if writerName not in lista_escritores:
 
-                db.add(Writer(name=writerName))
+                try:
+                    writerHeadshot = person['headshot']
+                except:
+                    print(
+                        f"Erro ao tentar achar a imagem do escritor {writerName}")
+
+                db.add(Writer(name=writerName, headshot=writerHeadshot,
+                       id_imdb_writer=writerIdImdb))
                 db.commit()
 
                 print(f"O escritor {writerName} foi cadastrado!")
@@ -201,16 +226,12 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
 
             actorName = person['name']
 
-            try:
-                actorHeadshot = person['headshot']
-            except:
-                print(f"Erro ao tentar achar a imagem do ator {actorName}")
-
-            lista_atores = db.query(Actor.name).all()
-
-            lista_atores = [x[0] for x in lista_atores]
-
             if actorName not in lista_atores:
+
+                try:
+                    actorHeadshot = person['headshot']
+                except:
+                    print(f"Erro ao tentar achar a imagem do ator {actorName}")
 
                 db.add(Actor(name=actorName, headshot=actorHeadshot,
                        id_imdb_actor=actorIdImdb))
@@ -249,26 +270,29 @@ def cadastrar_um_novo_filme_com_imdb(imdb_id: str, db: Session = Depends(get_db)
     return novo_filme
 
 
-@router.get('/{filme_id}')
+@ router.get('/{filme_id}')
 def retornar_filme(filme_id: int, db: Session = Depends(get_db)):
 
     movie = db.query(Movie).get(filme_id)
 
     idMovie = movie.id
 
-    genre = db.query(GenreInMovie).filter(
+    genres = db.query(GenreInMovie).filter(
         GenreInMovie.movie_id == idMovie).all()
 
-    director = db.query(DirectorInMovie).filter(
+    directors = db.query(DirectorInMovie).filter(
         DirectorInMovie.movie_id == idMovie).all()
 
-    writer = db.query(WriterInMovie).filter(
+    writers = db.query(WriterInMovie).filter(
         WriterInMovie.movie_id == idMovie).all()
 
-    return movie, director, genre, writer
+    actors = db.query(ActorInMovie).filter(
+        ActorInMovie.movie_id == idMovie).all()
+
+    return movie, genres, directors, writers, actors
 
 
-@router.delete('/{filme_id}')
+@ router.delete('/{filme_id}')
 def deletar_filme(filme_id: int, db: Session = Depends(get_db)):
     db.query(Movie).filter(Movie.id == filme_id).delete(
         synchronize_session=False)
@@ -277,7 +301,7 @@ def deletar_filme(filme_id: int, db: Session = Depends(get_db)):
     return "Filme deletado com sucesso!"
 
 
-@router.put('/{filme_id}')
+@ router.put('/{filme_id}')
 def atualizar_informacoes_do_filme(request: AddMovie, filme_id: int, db: Session = Depends(get_db)):
 
     db.query(Movie).filter(Movie.id == filme_id).update(request.dict())

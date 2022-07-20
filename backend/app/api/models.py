@@ -42,7 +42,9 @@ class GenreInMovie(Base):
 class Director(Base):
     __tablename__ = "directors"
     id = Column(Integer, primary_key=True, index=True)
+    id_imdb_director = Column(String)
     name = Column(String)
+    headshot = Column(String)
 
 
 class DirectorInMovie(Base):
@@ -60,7 +62,9 @@ class DirectorInMovie(Base):
 class Writer(Base):
     __tablename__ = "writers"
     id = Column(Integer, primary_key=True, index=True)
+    id_imdb_writer = Column(String)
     name = Column(String)
+    headshot = Column(String)
 
 
 class WriterInMovie(Base):
